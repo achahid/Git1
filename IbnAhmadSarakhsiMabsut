@@ -1,0 +1,154 @@
+
+##################################################################
+#     Author:                                                    #
+#     Abdelhak chahid                                            # 
+#     ch_abdelhak@hotmail.com                                    #
+##################################################################
+
+#Packages
+
+install.packages('tm')
+library('tm')
+install.packages("arabicStemR")
+library(arabicStemR)
+install.packages("wordcloud2")
+library("wordcloud2")
+
+
+### Text 
+# The text can be found on the next webpage: 
+# https://github.com/OpenITI/0500AH/tree/master/data/0483IbnAhmadSarakhsi/0483IbnAhmadSarakhsi.Mabsut "
+
+# Importing the text:
+Sarkhasi <- readLines("IbnAhmadSarakhsiMabsut.txt",encoding = "UTF-8")
+
+
+#####################
+# Cleaning the text #
+#####################
+
+# remove the first lines:
+Sarkhasi  <- Sarkhasi [-(1:40)]
+
+# Converting sentence to word vector:
+p <- unlist(strsplit(Sarkhasi, " "))
+
+# Reomve the "#"
+hash <- grep("#", p)
+x <- p[-hash]
+
+# Reomve the "~"
+chr1 <- grep("~", x)
+x <- x[-chr1]
+
+# Reomve the "PageV"
+PageV <- grep("PageV", x)
+x <- x[-PageV]
+
+# Reomve the "Milestone"
+Milestone <- grep("Milestone", x)
+x <- x[-Milestone]
+
+# Reomve the "@Q"
+Q <- grep("@Q", x)
+x <- x[-Q]
+
+# Reomve the empty space ""
+x <- removeNumbers(x)
+x  <- x[x!= ""]# remove the empty lines space 
+
+
+p <- paste(x, sep="", collapse=" ") 
+
+
+# write the output in arabic:
+print(Sys.getlocale(category= "LC_CTYPE")) # CHECKING THE local language
+original.ctype <- Sys.getlocale(category = "LC_CTYPE" ) # save the original,so that we can use them later , or go back to the original language
+
+# switch to the appropriate local for the script,
+
+Sys.setlocale("LC_CTYPE","arabic")
+
+# Write a clean text file to your repository :
+write.table(p, "Sarkhashi_Clean.txt", quote = FALSE,fileEncoding = "UTF-8")
+
+
+
+
+I- Question 1:  what are the frequencies of wordes"senses" in the Sarkhashi text Mabsut
+
+##########
+# Senses #
+##########
+
+hearing <- grep("السمع", x)
+
+# The frequencies 
+H <- x[hearing]
+H.fr <- length(H) 
+
+# The context of hearing: Suppose we want to explore the context where Hearing is used. using a range of 10 words.
+bin <- 10  
+
+for( i in 1:length(hearing)){
+  m <- x[(hearing[i]-bin): (hearing[i] + bin)]
+  k <- paste(m, sep="", collapse=" ") # the context of the word
+  print(k)
+}
+
+# We will use the sqme technique for other senses. Note one importatnt issue here is that the word for which we
+# are loking for, can have different meaning in different forms: like for example: " البصرة" , "البصر", "البصراء".....
+# We may use other way of mining the word "البصر"? 
+
+# The context of seen:
+seen <- grep("البصر", x)
+S <- x[seen]
+S.fr <- length(S)
+
+bin <- 10
+
+for( i in 1:length(seen)){
+  m <- x[(seen[i]-bin): (seen[i] + bin)]
+  k <- paste(m, sep="", collapse=" ") # the context of the word
+  print(k)
+}
+    
+# The context of tasting:
+tast <- grep("الذوق", x)
+Ts <- x[tast]
+t.fr <- length(Ts)# frequencies
+
+
+# The context of smelling:
+Smel <- grep("الشم", x)
+Smel <- x[Smel]
+Smel.fr <- length(Smel)# frequencies
+
+
+# The context of touch:
+touch <- grep("اللمس", x)
+touch <- x[touch]
+touch.fr <- length(touch)# frequencies
+
+
+n <- c("اللمس","الشم","الذوق","البصر","السمع")
+
+# Translate and back translate:
+N <- transliterate(n)
+
+M <- vector()
+for(i in 1:length(N)){
+  M[i] <- reverse.transliterate(N[i])
+
+}
+
+k <- unlist(list(touch.fr,Smel.fr,t.fr,S.fr,H.fr))
+
+df <- data.frame(words =M,freq= k)
+
+# Histogram 
+library(ggplot2)
+ggplot(df, aes(x=words,y = freq)) +geom_bar(stat = "identity",col="red", 
+                                              fill="green") # in general
+
+
